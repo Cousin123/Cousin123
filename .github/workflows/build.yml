@@ -1,0 +1,34 @@
+name: Build APK
+on: 
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+      
+      - name: Extract and setup project
+        run: |
+          unzip -q *.zip -d ./app
+          cd ./app
+          find . -name "pubspec.yaml" -exec dirname {} \; | head -1 | xargs -I {} mv {} ./project
+          cd ./project
+      
+      - name: Get dependencies
+        run: cd ./app/project && flutter pub get
+      
+      - name: Build APK
+        run: cd ./app/project && flutter build apk --release
+      
+      - name: Upload APK
+        uses: actions/upload-artifact@v2
+        with:
+          name: app-apk
+          path: app/project/build/app/outputs/flutter-apk/app-release.apk
